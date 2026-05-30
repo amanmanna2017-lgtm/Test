@@ -1,12 +1,15 @@
 services:
   - type: web
     name: drx-api
-    runtime: python
+    runtime: image
+    repo: https://github.com/YOUR_USERNAME/YOUR_REPO
+    image:
+      url: drx-api
     buildCommand: |
-      apt-get update
-      apt-get install -y gcc build-essential
+      apt-get update && apt-get install -y gcc python3 python3-pip
+      pip3 install flask gunicorn
       gcc khalnayak.c -o khalnayak -lpthread -O3
-    startCommand: gunicorn server:app --bind 0.0.0.0:8080 --timeout 300 --workers 1
+    startCommand: gunicorn server:app --bind 0.0.0.0:8080
     envVars:
       - key: API_KEY
         value: BHAG_BHOSDIKE_2024
@@ -14,7 +17,7 @@ services:
   - type: worker
     name: drx-bot
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install telebot requests
     startCommand: python3 bot.py
     envVars:
       - key: BOT_TOKEN

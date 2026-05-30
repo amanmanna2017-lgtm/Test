@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: drx-api
+    runtime: python
+    buildCommand: |
+      apt-get update
+      apt-get install -y gcc build-essential
+      gcc khalnayak.c -o khalnayak -lpthread -O3
+    startCommand: gunicorn server:app --bind 0.0.0.0:8080 --timeout 300 --workers 1
+    envVars:
+      - key: API_KEY
+        value: BHAG_BHOSDIKE_2024
+
+  - type: worker
+    name: drx-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 bot.py
+    envVars:
+      - key: BOT_TOKEN
+        value: 8898448854:AAFPfCiuwtqVSRzZiob5ubMZ5PRbhWWfs8A
+      - key: ADMIN_ID
+        value: 7837187893
+      - key: API_KEY
+        value: BHAG_BHOSDIKE_2024
+      - key: API_URL
+        value: https://drx-api.onrender.com/api/strike

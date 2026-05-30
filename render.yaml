@@ -2,9 +2,6 @@ services:
   - type: web
     name: drx-api
     runtime: image
-    repo: https://github.com/YOUR_USERNAME/YOUR_REPO
-    image:
-      url: drx-api
     buildCommand: |
       apt-get update && apt-get install -y gcc python3 python3-pip
       pip3 install flask gunicorn
@@ -12,7 +9,7 @@ services:
     startCommand: gunicorn server:app --bind 0.0.0.0:8080
     envVars:
       - key: API_KEY
-        value: BHAG_BHOSDIKE_2024
+        sync: false
 
   - type: worker
     name: drx-bot
@@ -21,10 +18,10 @@ services:
     startCommand: python3 bot.py
     envVars:
       - key: BOT_TOKEN
-        value: 8898448854:AAFPfCiuwtqVSRzZiob5ubMZ5PRbhWWfs8A
+        sync: false
       - key: ADMIN_ID
-        value: 7837187893
+        sync: false
       - key: API_KEY
-        value: BHAG_BHOSDIKE_2024
+        sync: false
       - key: API_URL
-        value: https://drx-api.onrender.com/api/strike
+        sync: false

